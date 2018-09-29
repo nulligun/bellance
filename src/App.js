@@ -5,6 +5,7 @@ import 'react-day-picker/lib/style.css';
 import SelectedDateList from './components/selected-date-list';
 import Address from './components/address';
 import Chart from './components/chart';
+import moment from 'moment';
 
 var {EventEmitter} = require('fbemitter');
 window.ee = new EventEmitter();
@@ -16,6 +17,7 @@ class App extends Component {
 		this.handleDayMouseUp = this.handleDayMouseUp.bind(this);
 		this.handleDayMouseEnter = this.handleDayMouseEnter.bind(this);
 		this.selectionModeChanged = this.selectionModeChanged.bind(this);
+		this.handleResetClick = this.handleResetClick.bind(this);
 
 		this.state = {
 			selectedDays: [],
@@ -35,11 +37,24 @@ class App extends Component {
 	}
 
 	handleDayMouseEnter(day) {
-		if (this.mouseDownState === 'deselect') {
-			this.deselectDay(day);
-		} else if (this.mouseDownState === 'select') {
-			this.selectDay(day);
+		if (this.state.selectionMode === 'day') {
+			if (this.mouseDownState === 'deselect') {
+				this.deselectDay(day);
+			} else if (this.mouseDownState === 'select') {
+				this.selectDay(day);
+			}
+		} else {
+			const { from, to } = this.state;
+			if (!this.isSelectingFirstDay(from, to, day)) {
+				this.setState({
+					enteredTo: day,
+				});
+			}
 		}
+	}
+
+	handleResetClick() {
+
 	}
 
 	deselectDay(day) {
@@ -60,25 +75,70 @@ class App extends Component {
 	}
 
 	handleDayMouseDown(day, { selected }) {
-		if (selected) {
-			this.mouseDownState = 'deselect';
-			this.deselectDay(day);
+		if (this.state.selectionMode === 'day') {
+			if (selected) {
+				this.mouseDownState = 'deselect';
+				this.deselectDay(day);
+			} else {
+				this.mouseDownState = 'select';
+				this.selectDay(day);
+			}
 		} else {
-			this.mouseDownState = 'select';
-			this.selectDay(day);
+			this.dateList.current.clearAll();
+			window.ee.emit('dataCleared');
 		}
 	}
 
-	handleDayMouseUp() {
-		this.mouseDownState = 'none';
+	handleDayMouseUp(day) {
+		if (this.state.selectionMode === 'day') {
+			this.mouseDownState = 'none';
+		} else {
+			const { from, to } = this.state;
+			if (from && to && day >= from && day <= to) {
+				this.handleResetClick();
+				return;
+			}
+			if (this.isSelectingFirstDay(from, to, day)) {
+				this.setState({
+					from: day,
+					to: null,
+					enteredTo: null,
+				});
+			} else {
+
+				this.dateList.current.clearAll();
+				window.ee.emit('dataCleared');
+
+				let from = moment(this.state.from);
+				let to = moment(day);
+				this.dateList.current.addDateRange(from, to);
+
+				this.setState({
+					to: day,
+					enteredTo: day,
+				});
+			}
+		}
 	}
 
 	selectionModeChanged(e)
 	{
-		this.setState({selectionMode: e.target.name});
+		this.dateList.current.clearAll();
+		window.ee.emit('dataCleared');
+
+		this.setState({selectionMode: e.target.name, from: null, to: null, enteredTo: null, selectedDays: []});
 	}
 
   render() {
+		const { from, enteredTo } = this.state;
+	  let modifiers = {};
+	  let selectedDays = this.state.selectedDays;
+	  if (this.state.selectionMode === "range")
+	  {
+	  	modifiers.start = from;
+	  	modifiers.end = enteredTo;
+		  selectedDays = [from, { from, to: enteredTo }];
+	  }
 		let day_checked = (this.state.selectionMode === "day") ? "checked" : '';
 	  let range_checked = (this.state.selectionMode === "range") ? "checked" : '';
     return (
@@ -91,7 +151,8 @@ class App extends Component {
 	      </div>
 	      <DayPicker
 		      showOutsideDays
-		      selectedDays={this.state.selectedDays}
+		      modifiers={modifiers}
+		      selectedDays={selectedDays}
 		      onDayMouseDown={this.handleDayMouseDown}
 		      onDayMouseUp={this.handleDayMouseUp}
 		      onDayMouseEnter={this.handleDayMouseEnter}

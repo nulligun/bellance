@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ComposedChart, Line, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { ComposedChart, Line, Area, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import moment from 'moment';
 import update from 'immutability-helper';
 import ChartControl from './chart-control';
@@ -35,13 +35,17 @@ class Chart extends Component {
 			}
 		};
 
-		window.ee.addListener('dataReceived', function(day, data) {
-			let m = moment.unix(day).utc();
-			data['date'] = m.format('YYYY-MM-DD');
-			data['id'] = day;
+		window.ee.addListener('dataCleared', function() {
+			self.setState({data: []});
+		});
+		window.ee.addListener('dataReceived', function(dates) {
 			let new_data = JSON.parse(JSON.stringify(self.state.data));
-			new_data.push(data);
-			new_data.sort((a,b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
+			dates.forEach((data) => {
+				data['date'] = moment.unix(data.id).utc().format('YYYY-MM-DD');
+				data['id'] = data.id;
+				new_data.push(data);
+			});
+			new_data.sort((a, b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
 			self.setState({data: new_data});
 		});
 		window.ee.addListener('dataRemoved', function(day) {
@@ -77,6 +81,7 @@ class Chart extends Component {
 		switch (chart_type) {
 			case 'line': return Line; break;
 			case 'bar': return Bar; break;
+			case 'area': return Area; break;
 		}
 	}
 

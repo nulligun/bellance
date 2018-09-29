@@ -46,16 +46,11 @@ def balance_at():
         address = req['address'].lower()
         if not address_valid(address):
             res['error'] = 'address is not valid'
-        elif req['timestamp'] is None:
-            res['error'] = 'timestamp is required'
-
-    if req['interval'] is None:
-        interval = 60 * 60 * 24
-    else:
-        interval = int(req['interval'])
-    timestamp = int(req['timestamp'])
+        elif req['dates'] is None:
+            res['error'] = 'dates array is required'
 
     if 'error' not in res:
+        dates = req['dates']
         address_rec = session.query(Address).filter_by(address=address).one_or_none()
         if address_rec is None:
             new_address = Address()
@@ -86,7 +81,7 @@ def balance_at():
             new_address.date_updated = date_updated
             new_address.state = AddressStateEnum.complete
 
-            get_stats(res, new_address, timestamp, interval)
+            get_stats(res, new_address, dates)
 
             try:
                 session.commit()
@@ -97,9 +92,15 @@ def balance_at():
             if address_rec.state == AddressStateEnum.initializing:
                 res['initializing'] = True
             else:
-                if address_rec.date_updated < int(timestamp):
+                stale = False
+                for d in dates:
+                    if address_rec.date_updated < d['timestamp']:
+                        stale = True
+                        break
+
+                if stale:
                     date_updated = datetime.datetime.utcnow()
-                    for t in transactions.find({"addresses": address, "timeStamp": {"$gt": rec.date_updated}}):
+                    for t in transactions.find({"addresses": address, "timeStamp": {"$gt": address_rec.date_updated}}):
                         if t['value'] != "0":
                             fer = Transfer()
                             fer.address = address_rec
@@ -118,7 +119,7 @@ def balance_at():
                         session.rollback()
                         raise
 
-                get_stats(res, address_rec, timestamp, interval)
+                get_stats(res, address_rec, dates)
 
             try:
                 session.commit()
@@ -129,30 +130,37 @@ def balance_at():
     return jsonify(res)
 
 
-def get_stats(res, address, timestamp, interval):
-    t = session.query(func.sum(Transfer.amount).label("balance")).filter_by(address=address).filter(Transfer.date_added <= timestamp).one()
-    d1 = session.query(func.sum(Transfer.amount).label("balance")).filter_by(address=address).filter(Transfer.date_added <= (timestamp - interval)).one()
-    d2 = session.query(func.sum(Transfer.amount).label("balance")).filter_by(address=address).filter(Transfer.date_added <= timestamp).filter(Transfer.date_added >= (timestamp - interval)).filter(Transfer.amount > 0).one()
-    d3 = session.query(func.sum(Transfer.amount).label("balance")).filter_by(address=address).filter(Transfer.date_added <= timestamp).filter(Transfer.date_added >= (timestamp - interval)).filter(Transfer.amount < 0).one()
-    if t[0] is None:
-        res['balance'] = 0
-    else:
-        res['balance'] = float(t[0])
+def get_stats(res, address, dates):
+    res['dates'] = []
+    for d in dates:
+        timestamp = int(d['timestamp'])
+        interval = int(d['interval'])
 
-    if d1[0] is None:
-        res['delta'] = 0
-    else:
-        res['delta'] = float(t[0]) - float(d1[0])
+        entry = {"id": d['id']}
+        t = session.query(func.sum(Transfer.amount).label("balance")).filter_by(address=address).filter(Transfer.date_added <= timestamp).one()
+        d1 = session.query(func.sum(Transfer.amount).label("balance")).filter_by(address=address).filter(Transfer.date_added <= (timestamp - interval)).one()
+        d2 = session.query(func.sum(Transfer.amount).label("balance")).filter_by(address=address).filter(Transfer.date_added <= timestamp).filter(Transfer.date_added >= (timestamp - interval)).filter(Transfer.amount > 0).one()
+        d3 = session.query(func.sum(Transfer.amount).label("balance")).filter_by(address=address).filter(Transfer.date_added <= timestamp).filter(Transfer.date_added >= (timestamp - interval)).filter(Transfer.amount < 0).one()
+        if t[0] is None:
+            entry['balance'] = 0
+        else:
+            entry['balance'] = float(t[0])
 
-    if d3[0] is None:
-        res['spent'] = 0
-    else:
-        res['spent'] = abs(float(d3[0]))
+        if d1[0] is None:
+            entry['delta'] = 0
+        else:
+            entry['delta'] = float(t[0]) - float(d1[0])
 
-    if d2[0] is None:
-        res['earned'] = 0
-    else:
-        res['earned'] = float(d2[0])
+        if d3[0] is None:
+            entry['spent'] = 0
+        else:
+            entry['spent'] = abs(float(d3[0]))
+
+        if d2[0] is None:
+            entry['earned'] = 0
+        else:
+            entry['earned'] = float(d2[0])
+        res['dates'].append(entry)
 
 
 app.run(debug=True)

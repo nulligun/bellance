@@ -30,6 +30,7 @@ class ChartControl extends Component {
 			<select onChange={this.typeChanged}>
 				<option value="line">Line</option>
 				<option value="bar">Bar</option>
+				<option value="area">Area</option>
 				<option value="hidden">Hidden</option>
 			</select>
 			<ColorControl onChange={this.colorChanged}/>

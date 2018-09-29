@@ -10,7 +10,9 @@ class SelectedDateList extends Component {
 		super(props);
 		this.addDay = this.addDay.bind(this);
 		this.removeDay = this.removeDay.bind(this);
+		this.clearAll = this.clearAll.bind(this);
 		this.downloadCSV = this.downloadCSV.bind(this);
+		this.getBalances = this.getBalances.bind(this);
 		let self = this;
 		window.ee.addListener('addressChanged', function(a) {
 			self.setState({address: a});
@@ -21,33 +23,66 @@ class SelectedDateList extends Component {
 		};
 	}
 
-	addDay(day)
+	clearAll()
 	{
-		let m = moment(day).utc();
+		this.setState({selectedDays: {}})
+	}
+
+	addDateRange(from, to)
+	{
+		from.utc();
+		to.utc();
 		let toAdd = {};
-		toAdd[m.unix()] = {state: 'pending', day: m, balance: 0, delta: 0, earned: 0, spent: 0};
+		let dates = [];
+		to.add(1, 'd');
+		while (from.isBefore(to))
+		{
+			toAdd[from.unix()] = {state: 'pending', day: moment(from).endOf('day'), balance: 0, delta: 0, earned: 0, spent: 0};
+			dates.push({id: from.unix(), timestamp: moment(from).endOf('day').unix(), interval: 60 * 60 * 24});
+			from.add(1, 'd');
+		}
 		let sd = {selectedDays: { ...toAdd, ...this.state.selectedDays}};
 		this.setState(sd);
 
-		var theday = m.unix();
+		this.getBalances(dates);
+	}
+
+	getBalances(dates)
+	{
 		var self = this;
-		axios.post('/api/balance_at_time', {address: this.state.address, timestamp: m.endOf('day').unix(), interval: 60 * 60 * 24}).then(res => {
+		axios.post('/api/balance_at_time', {address: this.state.address, dates: dates}).then((res) => {
 			if (res.data.error)
 			{
 				var up = {selectedDays: {}};
-				up['selectedDays'][theday] = {state: {$set: 'error'}};
+				res.data.dates.forEach((d) => {
+					up['selectedDays'][d.id] = {state: {$set: 'error'}};
+				});
 				window.ee.emit('addressError', res.data.error);
-				this.setState(update(self.state, up));
+				self.setState(update(self.state, up));
 			} else {
 				var up = {selectedDays: {}};
-				up['selectedDays'][theday] = {state: {$set: 'complete'}, balance: {$set: res.data.balance}, delta: {$set: res.data.delta}, earned: {$set: res.data.earned}, spent: {$set: res.data.spent}};
-				window.ee.emit('dataReceived', theday, {balance: res.data.balance, delta: res.data.delta, earned: res.data.earned, spent: res.data.spent});
-				this.setState(update(self.state, up));
+				res.data.dates.forEach((d, index) => {
+					res.data.dates[index]['id'] = d.id;
+					up['selectedDays'][d.id] = {state: {$set: 'complete'}, balance: {$set: d.balance}, delta: {$set: d.delta}, earned: {$set: d.earned}, spent: {$set: d.spent}};
+				});
+				window.ee.emit('dataReceived', res.data.dates);
+				self.setState(update(self.state, up));
 			}
 		});
 	}
 
-	downloadCSV(e) {
+	addDay(day)
+	{
+		let m = moment(day).utc();
+		let toAdd = {};
+		toAdd[m.unix()] = {state: 'pending', day: moment(m).endOf('day'), balance: 0, delta: 0, earned: 0, spent: 0};
+		let sd = {selectedDays: { ...toAdd, ...this.state.selectedDays}};
+		this.setState(sd);
+
+		this.getBalances([{id: m.unix(), timestamp: m.endOf('day').unix(), interval: 60 * 60 * 24}]);
+	}
+
+	downloadCSV() {
 		let self = this;
 		const listItems = Object.keys(this.state.selectedDays).sort((a, b) => this.state.selectedDays[a] === this.state.selectedDays[b].day ? 0 : ((this.state.selectedDays[a].day > this.state.selectedDays[b].day) ? 1 : -1)).map(function(day) {
 			let m = self.state.selectedDays[day];
@@ -91,6 +126,7 @@ class SelectedDateList extends Component {
 		}
 		return (<div className="selected-date-list">
 				<table cellPadding="0" cellSpacing="0">
+					<tbody>
 					<tr>
 					<th className="date-header">Date</th>
 					<th className="balance-header">Balance</th>
@@ -100,6 +136,7 @@ class SelectedDateList extends Component {
 					</tr>
 					{listItems}
 					{listItems.length > 0 && <tr><th>&nbsp;</th><th>Average</th><th>{delta_avg}</th><th>{earned_avg}</th><th>{spent_avg}</th></tr>}
+					</tbody>
 				</table>
 			<div className="csv-download" onClick={this.downloadCSV}>Download CSV</div>
 		</div>);
