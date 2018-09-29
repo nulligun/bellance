@@ -25,8 +25,20 @@ def deploy():
 
     rsync_project(
             local_dir=os.getcwd() + '/build/',
-            remote_dir=env.DEPLOY_TO,
+            remote_dir=env.DEPLOY_TO + 'web/',
             extra_opts='-l',
             exclude=[],
             delete=True
+    )
+
+@task
+def deploy_api():
+    require('DEPLOY_TO', provided_by=deploy_targets)
+
+    rsync_project(
+        local_dir=os.getcwd() + '/api/',
+        remote_dir=env.DEPLOY_TO + 'api/',
+        extra_opts='-l',
+        exclude=[],
+        delete=True
     )
