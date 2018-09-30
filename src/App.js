@@ -145,12 +145,10 @@ class App extends Component {
       <div className="App">
 	      <div className="intro">
 		      <h1>Ella Historical Balance Tool</h1>
-		      <p>Most likely very broken in the current state but it does do some things right if you are patient. Basic usage:</p>
 		      <p>Step 1.  Enter you Ellaism address into the first field.<br/>
 			      Step 2.  Click on a date on the calendar and wait.</p>
 
-		      <p>The server is downloading all your transactions from the block chain and storing them in a way that they can be easily queried. This might take a couple minutes if the server is busy or even longer if you have a lot of transactions.  After this initial loading effort is done, the app should respond fairly quickly to other requests.</p>
-		      <p>The balance might not be exact and could be off by a few Ella.  This means some transactions did not get properly cached into the database.  If this is a large problem I can rebuild this cache to try to fix it, but it takes a few days.</p>
+		      <p>The transaction cache is being downloaded by the server.  It will take a few days before your full balance appears.</p>
 
 	      </div>
 
