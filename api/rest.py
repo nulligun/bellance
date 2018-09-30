@@ -35,7 +35,7 @@ def address_valid(address):
     return False
 
 
-def download_transactions(address, timestamp = None):
+def download_transactions(address, timestamp=None):
     date_updated = 0
     if timestamp is None:
         query = {"addresses": address.address}
@@ -55,7 +55,8 @@ def download_transactions(address, timestamp = None):
                 date_updated = t['timeStamp']
         session.add(fer)
 
-    address.date_updated = date_updated
+    if date_updated > 0:
+        address.date_updated = date_updated
     address.state = AddressStateEnum.complete
 
 
