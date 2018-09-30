@@ -35,9 +35,13 @@ def address_valid(address):
     return False
 
 
-def download_transactions(address):
+def download_transactions(address, timestamp = None):
     date_updated = 0
-    for t in transactions.find({"addresses": address.address}):
+    if timestamp is None:
+        query = {"addresses": address.address}
+    else:
+        query = {"addresses": address.address, "timeStamp": {"$gt": timestamp}}
+    for t in transactions.find(query):
         if t['value'] != "0":
             fer = Transfer()
             fer.address = address
@@ -47,7 +51,8 @@ def download_transactions(address):
             else:
                 div = Decimal(1000000000000000000)
             fer.amount = Decimal(t['value']) / div
-            date_updated = t['timeStamp']
+            if t['timeStamp'] > date_updated:
+                date_updated = t['timeStamp']
         session.add(fer)
 
     address.date_updated = date_updated
@@ -95,22 +100,10 @@ def balance_at():
             if address_rec.state == AddressStateEnum.initializing:
                 res['initializing'] = True
             else:
-                stale = False
                 for d in dates:
                     if address_rec.date_updated < d['timestamp']:
-                        stale = True
+                        download_transactions(address_rec, address_rec.date_updated)
                         break
-
-                if stale:
-                    transf = session.query(Transfer).filter_by(address=address_rec)
-                    transf.delete(synchronize_session=False)
-                    download_transactions(address_rec)
-
-                    try:
-                        session.commit()
-                    except:
-                        session.rollback()
-                        raise
 
                 get_stats(res, address_rec, dates)
 
