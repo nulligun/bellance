@@ -42,7 +42,7 @@ def download_transactions(address):
             fer = Transfer()
             fer.address = address
             fer.date_added = t['timeStamp']
-            if t['from'] == address:
+            if t['from'] == address.address:
                 div = Decimal(-1000000000000000000)
             else:
                 div = Decimal(1000000000000000000)
