@@ -35,6 +35,25 @@ def address_valid(address):
     return False
 
 
+def download_transactions(address):
+    date_updated = 0
+    for t in transactions.find({"addresses": address.address}):
+        if t['value'] != "0":
+            fer = Transfer()
+            fer.address = address
+            fer.date_added = t['timeStamp']
+            if t['from'] == address:
+                div = Decimal(-1000000000000000000)
+            else:
+                div = Decimal(1000000000000000000)
+            fer.amount = Decimal(t['value']) / div
+            date_updated = t['timeStamp']
+        session.add(fer)
+
+    address.date_updated = date_updated
+    address.state = AddressStateEnum.complete
+
+
 @app.route('/balance_at_time', methods=["POST"])
 def balance_at():
     res = {}
@@ -64,23 +83,7 @@ def balance_at():
                 session.rollback()
                 raise
 
-            date_updated = 0
-            for t in transactions.find({"addresses": address}):
-                if t['value'] != "0":
-                    fer = Transfer()
-                    fer.address = new_address
-                    fer.date_added = t['timeStamp']
-                    if t['from'] == address:
-                        div = Decimal(-1000000000000000000)
-                    else:
-                        div = Decimal(1000000000000000000)
-                    fer.amount = Decimal(t['value']) / div
-                    date_updated = t['timeStamp']
-                    session.add(fer)
-
-            new_address.date_updated = date_updated
-            new_address.state = AddressStateEnum.complete
-
+            download_transactions(new_address)
             get_stats(res, new_address, dates)
 
             try:
@@ -99,20 +102,10 @@ def balance_at():
                         break
 
                 if stale:
-                    date_updated = datetime.datetime.utcnow()
-                    for t in transactions.find({"addresses": address, "timeStamp": {"$gt": address_rec.date_updated}}):
-                        if t['value'] != "0":
-                            fer = Transfer()
-                            fer.address = address_rec
-                            if t['from'] == address:
-                                div = Decimal(-1000000000000000000)
-                            else:
-                                div = Decimal(1000000000000000000)
-                            fer.date_added = t['timeStamp']
-                            date_updated = t['timeStamp']
-                            fer.amount = Decimal(t['value']) / div
-                            session.add(fer)
-                    address_rec.date_updated = date_updated
+                    transf = session.query(Transfer).filter_by(address=address_rec)
+                    transf.delete(synchronize_session=False)
+                    download_transactions(address_rec)
+
                     try:
                         session.commit()
                     except:
