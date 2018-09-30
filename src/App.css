@@ -69,3 +69,54 @@
 .selected-date-list {
     margin-bottom: 40px;
 }
+
+.address input {
+    width: 50%;
+    padding: 10px;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.date-selection-mode {
+    margin-top: 20px;
+}
+
+.selected-date-list button {
+    margin-top: 20px;
+}
+
+.dimensions .input-group {
+    justify-content: center;
+}
+
+.chart-section .chart-download {
+    margin-bottom: 20px;
+    margin-top: 10px;
+}
+
+.dimensions input {
+    width: 65px;
+    text-align: center;
+}
+
+.chart-control label {
+    width: 140px;
+}
+
+.chart-control {
+    width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.color-control div div {
+    padding: 0;
+}
+
+.chart-control .input-group-prepend {
+    height: 38px;
+}
+
+.label-enabled .input-group-text {
+    height: 38px;
+}

@@ -127,18 +127,20 @@ class SelectedDateList extends Component {
 		return (<div className="selected-date-list">
 				<table cellPadding="0" cellSpacing="0">
 					<tbody>
+					{listItems.length > 0 &&
 					<tr>
-					<th className="date-header">Date</th>
-					<th className="balance-header">Balance</th>
-					<th className="delta-header">Change</th>
-					<th className="earned-header">Earned</th>
-					<th className="spent-header">Spent</th>
+						<th className="date-header">Date</th>
+						<th className="balance-header">Balance</th>
+						<th className="delta-header">Change</th>
+						<th className="earned-header">Earned</th>
+						<th className="spent-header">Spent</th>
 					</tr>
+					}
 					{listItems}
 					{listItems.length > 0 && <tr><th>&nbsp;</th><th>Average</th><th>{delta_avg}</th><th>{earned_avg}</th><th>{spent_avg}</th></tr>}
 					</tbody>
 				</table>
-			<div className="csv-download" onClick={this.downloadCSV}>Download CSV</div>
+			{listItems.length > 0 && <button type="button" className="btn btn-primary csv-download" onClick={this.downloadCSV}>Download CSV</button>}
 		</div>);
 	}
 }

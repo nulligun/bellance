@@ -3,15 +3,14 @@ import reactCSS from 'reactcss'
 import { CompactPicker } from 'react-color'
 
 class ColorControl extends React.Component {
-	state = {
-		displayColorPicker: false,
-		color: {
-			r: '241',
-			g: '112',
-			b: '19',
-			a: '1',
-		},
-	};
+	constructor(props) {
+		super(props);
+
+		this.state = {
+			displayColorPicker: false,
+			color: props.color,
+		}
+	}
 
 	handleClick = () => {
 		this.setState({ displayColorPicker: !this.state.displayColorPicker })
@@ -32,12 +31,12 @@ class ColorControl extends React.Component {
 			'default': {
 				color: {
 					width: '36px',
-					height: '14px',
+					height: '36px',
 					borderRadius: '2px',
 					background: `rgba(${ this.state.color.r }, ${ this.state.color.g }, ${ this.state.color.b }, ${ this.state.color.a })`,
 				},
 				swatch: {
-					padding: '5px',
+					padding: '1px',
 					background: '#fff',
 					borderRadius: '1px',
 					boxShadow: '0 0 0 1px rgba(0,0,0,.1)',

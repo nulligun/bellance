@@ -143,11 +143,23 @@ class App extends Component {
 	  let range_checked = (this.state.selectionMode === "range") ? "checked" : '';
     return (
       <div className="App">
-				<header>Bellance</header>
-	      <Address address="0xF08d00694Ff9aDbE37960030fE622EdEa35Eb48F"/>
+	      <div className="intro">
+		      <h1>Ella Historical Balance Tool</h1>
+		      <p>Most likely very broken in the current state but it does do some things right if you are patient. Basic usage:</p>
+		      <p>Step 1.  Enter you Ellaism address into the first field.<br/>
+			      Step 2.  Click on a date on the calendar and wait.</p>
+
+		      <p>The server is downloading all your transactions from the block chain and storing them in a way that they can be easily queried. This might take a couple minutes if the server is busy or even longer if you have a lot of transactions.  After this initial loading effort is done, the app should respond fairly quickly to other requests.</p>
+		      <p>The balance might not be exact and could be off by a few Ella.  This means some transactions did not get properly cached into the database.  If this is a large problem I can rebuild this cache to try to fix it, but it takes a few days.</p>
+
+	      </div>
+
+	      <Address placeholder="Ellaism address" address="0xF08d00694Ff9aDbE37960030fE622EdEa35Eb48F"/>
 	      <div className="date-selection-mode">
-		      <label>Day</label><input type="radio" name="day" checked={day_checked} onChange={this.selectionModeChanged} />
-		      <label>Range</label><input type="radio" name="range" checked={range_checked} onChange={this.selectionModeChanged} />
+		      <div className="btn-group btn-group-toggle" data-toggle="buttons">
+			      <label className="btn btn-secondary active"><input type="radio" name="day" checked={day_checked} onChange={this.selectionModeChanged} /> Select By Day</label>
+			      <label className="btn btn-secondary"><input type="radio" name="range" checked={range_checked} onChange={this.selectionModeChanged} /> Select Range</label>
+		      </div>
 	      </div>
 	      <DayPicker
 		      showOutsideDays
