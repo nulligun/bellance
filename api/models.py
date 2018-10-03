@@ -32,3 +32,4 @@ class Transfer(Base):
     address = relationship("Address", foreign_keys=[address_id])
     date_added = Column(INTEGER(unsigned=True), nullable=False)
     amount = Column(NUMERIC(36, 18, unsigned=False), nullable=False, index=True)
+    tx = Column(String(255), nullable=False)

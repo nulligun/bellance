@@ -45,6 +45,7 @@ def download_transactions(address, timestamp=None):
         if t['value'] != "0":
             fer = Transfer()
             fer.address = address
+            fer.tx = t['_id']
             fer.date_added = t['timeStamp']
             if t['from'] == address.address:
                 div = Decimal(-1000000000000000000)
