@@ -147,9 +147,6 @@ class App extends Component {
 		      <h1>Ella Historical Balance Tool</h1>
 		      <p>Step 1.  Enter you Ellaism address into the first field.<br/>
 			      Step 2.  Click on a date on the calendar and wait.</p>
-
-		      <p>The transaction cache is being downloaded by the server.  It will take a few days before your full balance appears.</p>
-
 	      </div>
 
 	      <Address placeholder="Ellaism address" address="0xF08d00694Ff9aDbE37960030fE622EdEa35Eb48F"/>

@@ -1,35 +1,26 @@
 import enum
 from sqlalchemy import ForeignKey, Column, Integer, String, DateTime, Boolean, func, Enum, Text, Index, Numeric
-from sqlalchemy.dialects.mysql import BIGINT, INTEGER, NUMERIC
+from sqlalchemy.dialects.mysql import BIGINT, INTEGER, NUMERIC, CHAR
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
 
-class AddressStateEnum(enum.Enum):
-    initializing = 1
-    complete = 2
-
-
 class Address(Base):
     __tablename__ = "addresses"
 
     id = Column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
-    address = Column(String(255), nullable=False)
-    state = Column(Enum(AddressStateEnum), nullable=False, default=AddressStateEnum.initializing)
-    date_updated = Column(INTEGER(unsigned=True), nullable=False)
+    address = Column(CHAR(42), nullable=False, index=True, unique=True)
     __table_args__ = (
         Index('address_idx', 'address', unique=True, mysql_length=42),
     )
 
 
-class Transfer(Base):
-    __tablename__ = "transfers"
+class Balance(Base):
+    __tablename__ = "balances"
 
-    id = Column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
-    address_id = Column(INTEGER(unsigned=True), ForeignKey('addresses.id'))
+    address_id = Column(INTEGER(unsigned=True), ForeignKey('addresses.id'), primary_key=True)
     address = relationship("Address", foreign_keys=[address_id])
-    date_added = Column(INTEGER(unsigned=True), nullable=False)
-    amount = Column(NUMERIC(36, 18, unsigned=False), nullable=False, index=True)
-    tx = Column(String(255), nullable=False)
+    balance_date = Column(BIGINT(unsigned=True), nullable=False, primary_key=True)
+    delta = Column(NUMERIC(32, unsigned=False), nullable=False)

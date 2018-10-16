@@ -61,11 +61,13 @@ class SelectedDateList extends Component {
 				self.setState(update(self.state, up));
 			} else {
 				var up = {selectedDays: {}};
-				res.data.dates.forEach((d, index) => {
-					res.data.dates[index]['id'] = d.id;
-					up['selectedDays'][d.id] = {state: {$set: 'complete'}, balance: {$set: d.balance}, delta: {$set: d.delta}, earned: {$set: d.earned}, spent: {$set: d.spent}};
-				});
-				window.ee.emit('dataReceived', res.data.dates);
+				if (res.data.dates) {
+					res.data.dates.forEach((d, index) => {
+						res.data.dates[index]['id'] = d.id;
+						up['selectedDays'][d.id] = {state: {$set: 'complete'}, balance: {$set: d.balance}, delta: {$set: d.delta}, earned: {$set: d.earned}, spent: {$set: d.spent}};
+					});
+					window.ee.emit('dataReceived', res.data.dates);
+				}
 				self.setState(update(self.state, up));
 			}
 		});

@@ -15,7 +15,7 @@ def build():
 def prod():
     env.port = 2221
     env.hosts.append('stevemulligan@ssh.outdoordevs.com')
-    env.DEPLOY_TO = '/var/www/bellance/'
+    env.DEPLOY_TO = '/var/www/bellance2/'
 
 deploy_targets = [prod]
 
