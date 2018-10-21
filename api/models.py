@@ -24,3 +24,10 @@ class Balance(Base):
     address = relationship("Address", foreign_keys=[address_id])
     balance_date = Column(BIGINT(unsigned=True), nullable=False, primary_key=True)
     delta = Column(NUMERIC(32, unsigned=False), nullable=False)
+
+
+class ValidateStatus(Base):
+    __tablename__ = "validate_status"
+
+    id = Column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
+    current_full_validate_block = Column(INTEGER(unsigned=True), nullable=False)
