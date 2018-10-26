@@ -100,7 +100,7 @@ class SelectedDateList extends Component {
 							// if (up['selectedDays'][d.id]) {
 							// 	up['selectedDays'][d.id] = {state: {$set: 'complete'}, balance: {$set: d.balance}, delta: {$set: d.delta}, earned: {$set: d.earned}, spent: {$set: d.spent}};
 							// } else {
-								up['selectedDays'][d.id] = {$set: {day: moment(d.id), state: 'complete', balance: d.balance, delta: d.delta, earned: d.earned, spent: d.spent}};
+								up['selectedDays'][d.id] = {$set: {day: moment.unix(d.id).utc(), state: 'complete', balance: d.balance, delta: d.delta, earned: d.earned, spent: d.spent}};
 							//}
 						});
 						window.ee.emit('dataReceived', res.data.dates);
