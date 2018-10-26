@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, make_response
 from configobj import ConfigObj
 from flask_cors import CORS
 from sqlalchemy import create_engine, and_, or_
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 from models import *
 import logging
 from decimal import Decimal
@@ -14,10 +14,9 @@ logger.setLevel(logging.INFO)
 app = Flask(__name__)
 CORS(app)
 config = ConfigObj(".env")
-engine = create_engine("mysql+mysqldb://%(database_user)s:%(database_password)s@%(database_host)s/%(database_name)s" % config, isolation_level="READ UNCOMMITTED", pool_recycle=4)
-Session = sessionmaker()
-Session.configure(bind=engine)
-session = Session()
+engine = create_engine("mysql+mysqldb://%(database_user)s:%(database_password)s@%(database_host)s/%(database_name)s" % config)
+session_factory = sessionmaker(bind=engine)
+Session = scoped_session(session_factory)
 
 
 def address_valid(address):
@@ -44,18 +43,13 @@ def balance_at():
 
     if 'error' not in res:
         dates = req['dates']
-        address_rec = session.query(Address).filter_by(address=address).one_or_none()
+        address_rec = Session.query(Address).filter_by(address=address).one_or_none()
         if address_rec is None:
             res['error'] = 'address not found'
         else:
             get_stats(res, address_rec, dates)
 
-        try:
-            session.commit()
-        except:
-            session.rollback()
-            raise
-
+    Session.remove()
     return jsonify(res)
 
 
@@ -66,29 +60,32 @@ def get_stats(res, address, dates):
         interval = int(d['interval'])
 
         entry = {"id": d['id']}
-        t = session.query(func.sum(Balance.delta).label("balance")).filter_by(address=address).filter(Balance.balance_date <= timestamp).one()
-        d1 = session.query(func.sum(Balance.delta).label("balance")).filter_by(address=address).filter(Balance.balance_date <= (timestamp - interval)).one()
-        d2 = session.query(func.sum(Balance.delta).label("balance")).filter_by(address=address).filter(Balance.balance_date <= timestamp).filter(Balance.balance_date >= (timestamp - interval)).filter(Balance.delta > 0).one()
-        d3 = session.query(func.sum(Balance.delta).label("balance")).filter_by(address=address).filter(Balance.balance_date <= timestamp).filter(Balance.balance_date >= (timestamp - interval)).filter(Balance.delta < 0).one()
-        if t[0] is None:
+        balance = Session.query(func.sum(Balance.delta).label("balance")).filter_by(address=address).filter(Balance.balance_date <= timestamp).one()
+        delta = Session.query(func.sum(Balance.delta).label("delta")).filter_by(address=address).filter(Balance.balance_date <= (timestamp - interval)).one()
+        earned = Session.query(func.sum(Balance.delta).label("spent")).filter_by(address=address).filter(Balance.balance_date <= timestamp).filter(Balance.balance_date > (timestamp - interval)).filter(Balance.delta > 0).one()
+        spent = Session.query(func.sum(Balance.delta).label("earned")).filter_by(address=address).filter(Balance.balance_date <= timestamp).filter(Balance.balance_date > (timestamp - interval)).filter(Balance.delta < 0).one()
+        if balance[0] is None:
             entry['balance'] = 0
         else:
-            entry['balance'] = float(Decimal(t[0]) / Decimal(1000000000000000000))
+            entry['balance'] = float(Decimal(balance[0]) / Decimal(1000000000000000000))
 
-        if d1[0] is None:
-            entry['delta'] = 0
+        if delta[0] is None:
+            if balance[0] is None:
+                entry['delta'] = 0
+            else:
+                entry['delta'] = entry['balance']
         else:
-            entry['delta'] = float(Decimal(t[0]) / Decimal(1000000000000000000)) - float(Decimal(d1[0]) / Decimal(1000000000000000000))
+            entry['delta'] = float(Decimal(balance[0]) / Decimal(1000000000000000000)) - float(Decimal(delta[0]) / Decimal(1000000000000000000))
 
-        if d3[0] is None:
+        if spent[0] is None:
             entry['spent'] = 0
         else:
-            entry['spent'] = abs(float(Decimal(d3[0]) / Decimal(1000000000000000000)))
+            entry['spent'] = abs(float(Decimal(spent[0]) / Decimal(1000000000000000000)))
 
-        if d2[0] is None:
+        if earned[0] is None:
             entry['earned'] = 0
         else:
-            entry['earned'] = float(Decimal(d2[0]) / Decimal(1000000000000000000))
+            entry['earned'] = float(Decimal(earned[0]) / Decimal(1000000000000000000))
         res['dates'].append(entry)
 
 
