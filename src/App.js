@@ -19,15 +19,42 @@ class App extends Component {
 		this.selectionModeChanged = this.selectionModeChanged.bind(this);
 		this.handleResetClick = this.handleResetClick.bind(this);
 
+		var from = JSON.parse(localStorage.getItem('from'));
+		var enteredTo = JSON.parse(localStorage.getItem('enteredTo'));
+		var to = JSON.parse(localStorage.getItem('to'));
+
+		if (from != null) from = new Date(from);
+		if (to != null) to = new Date(to);
+		if (enteredTo != null) enteredTo = new Date(enteredTo);
+
 		this.state = {
-			selectedDays: [],
-			selectionMode: 'day',
-			from: null,
-			to: null,
-			enteredTo: null
+			selectedDays: JSON.parse(localStorage.getItem('selectedDays') || '[]').map((date) => {
+				return new Date(date)
+			}),
+			selectionMode: JSON.parse(localStorage.getItem('selectionMode') || '"day"'),
+			from: from,
+			to: to,
+			enteredTo: enteredTo
 		};
 
 		this.dateList = React.createRef();
+	}
+
+	componentDidMount()
+	{
+		let address = localStorage.getItem('address') || '0xF08d00694Ff9aDbE37960030fE622EdEa35Eb48F';
+		if (this.state.selectionMode === "day") {
+			this.dateList.current.setup(this.state.selectedDays, address)
+		} else {
+			var from = JSON.parse(localStorage.getItem('from'));
+			var to = JSON.parse(localStorage.getItem('to'));
+
+			if ((from != null) && (to != null)) {
+				if (from != null) from = moment(from);
+				if (to != null) to = moment(to);
+				this.dateList.current.setupDateRange(from, to, address);
+			}
+		}
 	}
 
 	isSelectingFirstDay(from, to, day) {
@@ -46,6 +73,7 @@ class App extends Component {
 		} else {
 			const { from, to } = this.state;
 			if (!this.isSelectingFirstDay(from, to, day)) {
+				localStorage.setItem('enteredTo', JSON.stringify(day));
 				this.setState({
 					enteredTo: day,
 				});
@@ -64,6 +92,7 @@ class App extends Component {
 		);
 		this.dateList.current.removeDay(day);
 		selectedDays.splice(selectedIndex, 1);
+		localStorage.setItem('selectedDays', JSON.stringify(selectedDays));
 		this.setState({ selectedDays });
 	}
 
@@ -71,6 +100,7 @@ class App extends Component {
 		const { selectedDays } = this.state;
 		this.dateList.current.addDay(day);
 		selectedDays.push(day);
+		localStorage.setItem('selectedDays', JSON.stringify(selectedDays));
 		this.setState({ selectedDays });
 	}
 
@@ -99,19 +129,24 @@ class App extends Component {
 				return;
 			}
 			if (this.isSelectingFirstDay(from, to, day)) {
+				localStorage.setItem('from', JSON.stringify(day));
+				localStorage.setItem('to', JSON.stringify(null));
+				localStorage.setItem('enteredTo', JSON.stringify(null));
 				this.setState({
 					from: day,
 					to: null,
 					enteredTo: null,
 				});
 			} else {
-
 				this.dateList.current.clearAll();
 				window.ee.emit('dataCleared');
 
 				let from = moment(this.state.from);
 				let to = moment(day);
 				this.dateList.current.addDateRange(from, to);
+
+				localStorage.setItem('to', JSON.stringify(day));
+				localStorage.setItem('enteredTo', JSON.stringify(day));
 
 				this.setState({
 					to: day,
@@ -126,6 +161,11 @@ class App extends Component {
 		this.dateList.current.clearAll();
 		window.ee.emit('dataCleared');
 
+		localStorage.setItem('selectionMode', JSON.stringify(e.target.name));
+		localStorage.setItem('from', JSON.stringify(null));
+		localStorage.setItem('to', JSON.stringify(null));
+		localStorage.setItem('enteredTo', JSON.stringify(null));
+		localStorage.setItem('selectedDays', JSON.stringify([]));
 		this.setState({selectionMode: e.target.name, from: null, to: null, enteredTo: null, selectedDays: []});
 	}
 
@@ -145,11 +185,8 @@ class App extends Component {
       <div className="App">
 	      <div className="intro">
 		      <h1>Ella Historical Balance Tool</h1>
-		      <p>Step 1.  Enter you Ellaism address into the first field.<br/>
-			      Step 2.  Click on a date on the calendar and wait.</p>
 	      </div>
-
-	      <Address placeholder="Ellaism address" address="0xF08d00694Ff9aDbE37960030fE622EdEa35Eb48F"/>
+	      <Address placeholder="Ellaism address" addressChanged={this.addressChanged}/>
 	      <div className="date-selection-mode">
 		      <div className="btn-group btn-group-toggle" data-toggle="buttons">
 			      <label className="btn btn-secondary active"><input type="radio" name="day" checked={day_checked} onChange={this.selectionModeChanged} /> Select By Day</label>
@@ -169,7 +206,7 @@ class App extends Component {
 			      }
 			      ]}
 	      />
-	      <SelectedDateList ref={this.dateList}/>
+	      <SelectedDateList ref={this.dateList} />
 	      <Chart/>
       </div>
     );

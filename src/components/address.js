@@ -10,10 +10,12 @@ class Address extends Component {
 			self.setState({has_error: true, error_message: error});
 		});
 
+		var address = localStorage.getItem('address') || '0xF08d00694Ff9aDbE37960030fE622EdEa35Eb48F';
+
 		this.state = {
 			has_error: false,
 			error_message: '',
-			address: props.address
+			address: address
 		}
 	}
 
@@ -26,6 +28,7 @@ class Address extends Component {
 	{
 		this.setState({address: e.target.value, has_error: false, error_message: ''});
 		window.ee.emit('addressChanged', e.target.value);
+		localStorage.setItem('address', e.target.value);
 	}
 
 	render() {

@@ -41,26 +41,26 @@ class Chart extends Component {
 		this.state = {
 			data: [],
 			chart_type: {
-				balance: 'line',
-				delta: 'line',
-				spent: 'line',
-				earned: 'line'
+				balance: JSON.parse(localStorage.getItem("balance_chart_type")) || 'line',
+				delta: JSON.parse(localStorage.getItem("delta_chart_type")) || 'line',
+				spent: JSON.parse(localStorage.getItem("spent_chart_type")) || 'line',
+				earned: JSON.parse(localStorage.getItem("earned_chart_type")) || 'line',
 			},
 			chart_color: {
-				balance: '#4D4D4D',
-				delta: '#FCC400',
-				spent: '#A4DD00',
-				earned: '#9F0500'
+				balance: JSON.parse(localStorage.getItem("balance_color")) || '#4D4D4D',
+				delta: JSON.parse(localStorage.getItem("delta_delta")) || '#FCC400',
+				spent: JSON.parse(localStorage.getItem("spent_spent")) || '#A4DD00',
+				earned: JSON.parse(localStorage.getItem("earned_earned")) || '#9F0500'
 			},
 			chart_label: {
-				balance: true,
-				delta: false,
-				spent: false,
-				earned: false
+				balance: JSON.parse(localStorage.getItem("balance_label") || 'true'),
+				delta: JSON.parse(localStorage.getItem("delta_label") || 'false'),
+				spent: JSON.parse(localStorage.getItem("spent_label") || 'false'),
+				earned: JSON.parse(localStorage.getItem("earned_label") || 'false'),
 			},
 			dimensions: {
-				width: 640,
-				height: 320
+				width: JSON.parse(localStorage.getItem("width_dimension")) || 640,
+				height: JSON.parse(localStorage.getItem("height_dimension")) || 320
 			}
 		};
 
@@ -105,6 +105,7 @@ class Chart extends Component {
 	{
 		let up = {chart_type: {}};
 		up.chart_type[category] = {$set: chart_type};
+		localStorage.setItem(category + '_chart_type', JSON.stringify(chart_type));
 		this.setState(update(this.state, up));
 	}
 
@@ -112,6 +113,7 @@ class Chart extends Component {
 	{
 		let up = {chart_color: {}};
 		up.chart_color[category] = {$set: color};
+		localStorage.setItem(category + '_color', JSON.stringify(color));
 		this.setState(update(this.state, up));
 	}
 
@@ -119,6 +121,7 @@ class Chart extends Component {
 	{
 		let up = {chart_label: {}};
 		up.chart_label[category] = {$set: enabled};
+		localStorage.setItem(category + '_label', JSON.stringify(enabled));
 		this.setState(update(this.state, up));
 	}
 
@@ -143,6 +146,7 @@ class Chart extends Component {
 	{
 		let up = {dimensions: {}};
 		up.dimensions[e.target.name] = {$set: parseInt(e.target.value)};
+		localStorage.setItem(e.target.name + '_dimension', JSON.stringify(parseInt(e.target.value)));
 		this.setState(update(this.state, up));
 	}
 
@@ -183,10 +187,10 @@ class Chart extends Component {
 						</div>
 					</div>
 				</div>
-				<ChartControl label="Balance Chart" category="balance" checked={this.state.chart_label.balance} color={this.hexToRgb(this.state.chart_color.balance)} typeUpdated={this.typeUpdated} colorUpdated={this.colorUpdated} labelUpdated={this.labelUpdated} />
-				<ChartControl label="Delta Chart" category="delta" checked={this.state.chart_label.delta} color={this.hexToRgb(this.state.chart_color.delta)} typeUpdated={this.typeUpdated} colorUpdated={this.colorUpdated} labelUpdated={this.labelUpdated} />
-				<ChartControl label="Earned Chart" category="earned" checked={this.state.chart_label.earned} color={this.hexToRgb(this.state.chart_color.earned)} typeUpdated={this.typeUpdated} colorUpdated={this.colorUpdated} labelUpdated={this.labelUpdated} />
-				<ChartControl label="Spent Chart" category="spent" checked={this.state.chart_label.spent} color={this.hexToRgb(this.state.chart_color.spent)} typeUpdated={this.typeUpdated} colorUpdated={this.colorUpdated} labelUpdated={this.labelUpdated} />
+				<ChartControl label="Balance Chart" category="balance" chartType={this.state.chart_type.balance} checked={this.state.chart_label.balance} color={this.hexToRgb(this.state.chart_color.balance)} typeUpdated={this.typeUpdated} colorUpdated={this.colorUpdated} labelUpdated={this.labelUpdated} />
+				<ChartControl label="Delta Chart" category="delta" chartType={this.state.chart_type.delta} checked={this.state.chart_label.delta} color={this.hexToRgb(this.state.chart_color.delta)} typeUpdated={this.typeUpdated} colorUpdated={this.colorUpdated} labelUpdated={this.labelUpdated} />
+				<ChartControl label="Earned Chart" category="earned" chartType={this.state.chart_type.earned} checked={this.state.chart_label.earned} color={this.hexToRgb(this.state.chart_color.earned)} typeUpdated={this.typeUpdated} colorUpdated={this.colorUpdated} labelUpdated={this.labelUpdated} />
+				<ChartControl label="Spent Chart" category="spent" chartType={this.state.chart_type.spent} checked={this.state.chart_label.spent} color={this.hexToRgb(this.state.chart_color.spent)} typeUpdated={this.typeUpdated} colorUpdated={this.colorUpdated} labelUpdated={this.labelUpdated} />
 			</div>
 		</div>
 		);

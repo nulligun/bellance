@@ -13,19 +13,46 @@ class SelectedDateList extends Component {
 		this.clearAll = this.clearAll.bind(this);
 		this.downloadCSV = this.downloadCSV.bind(this);
 		this.getBalances = this.getBalances.bind(this);
-		let self = this;
-		window.ee.addListener('addressChanged', function(a) {
-			self.setState({address: a});
-		});
 		this.state = {
 			selectedDays: {},
-			address: null
 		};
+		this.address = null;
+	}
+
+	setup(days, address)
+	{
+		let self = this;
+		this.state = {
+			selectedDays: {},
+		};
+		this.address = address;
+		days.forEach((day) => {
+			self.addDay(day);
+		});
 	}
 
 	clearAll()
 	{
 		this.setState({selectedDays: {}})
+	}
+
+	setupDateRange(from, to, address)
+	{
+		this.address = address;
+		from.utc();
+		to.utc();
+		let toAdd = {};
+		let dates = [];
+		to.add(1, 'd');
+		while (from.isBefore(to))
+		{
+			toAdd[from.unix()] = {state: 'pending', day: moment(from).endOf('day'), balance: 0, delta: 0, earned: 0, spent: 0};
+			dates.push({id: from.unix(), timestamp: moment(from).endOf('day').unix(), interval: 60 * 60 * 24});
+			from.add(1, 'd');
+		}
+		let sd = {selectedDays: { ...toAdd, ...this.state.selectedDays}};
+		this.setState(sd);
+		this.getBalances(dates);
 	}
 
 	addDateRange(from, to)
@@ -50,27 +77,35 @@ class SelectedDateList extends Component {
 	getBalances(dates)
 	{
 		var self = this;
-		axios.post('/api/balance_at_time', {address: this.state.address, dates: dates}).then((res) => {
-			if (res.data.error)
-			{
-				var up = {selectedDays: {}};
-				res.data.dates.forEach((d) => {
-					up['selectedDays'][d.id] = {state: {$set: 'error'}};
-				});
-				window.ee.emit('addressError', res.data.error);
-				self.setState(update(self.state, up));
-			} else {
-				var up = {selectedDays: {}};
-				if (res.data.dates) {
-					res.data.dates.forEach((d, index) => {
-						res.data.dates[index]['id'] = d.id;
-						up['selectedDays'][d.id] = {state: {$set: 'complete'}, balance: {$set: d.balance}, delta: {$set: d.delta}, earned: {$set: d.earned}, spent: {$set: d.spent}};
+		if (this.address === null)
+		{
+			console.error("Address not defined yet");
+		} else {
+			console.log("getting balances ");
+			console.log(dates);
+			axios.post('/api/balance_at_time', {address: this.address, dates: dates}).then((res) => {
+				if (res.data.error) {
+					var up = {selectedDays: {}};
+					res.data.dates.forEach((d) => {
+						up['selectedDays'][d.id] = {state: {$set: 'error'}};
 					});
-					window.ee.emit('dataReceived', res.data.dates);
+					window.ee.emit('addressError', res.data.error);
+					self.setState(update(self.state, up));
+				} else {
+					//NOTE: This pattern is important, the updated object must be created in setState because it's triggered by ajax callback
+					self.setState((previousState, currentProps) => {
+						var up = {selectedDays: {}};
+						res.data.dates.forEach((d, index) => {
+							res.data.dates[index]['id'] = d.id;
+							up['selectedDays'][d.id] = {state: {$set: 'complete'}, balance: {$set: d.balance}, delta: {$set: d.delta}, earned: {$set: d.earned}, spent: {$set: d.spent}};
+						});
+						window.ee.emit('dataReceived', res.data.dates);
+						var newState = update(previousState, up);
+						return newState;
+					});
 				}
-				self.setState(update(self.state, up));
-			}
-		});
+			});
+		}
 	}
 
 	addDay(day)
@@ -80,7 +115,6 @@ class SelectedDateList extends Component {
 		toAdd[m.unix()] = {state: 'pending', day: moment(m).endOf('day'), balance: 0, delta: 0, earned: 0, spent: 0};
 		let sd = {selectedDays: { ...toAdd, ...this.state.selectedDays}};
 		this.setState(sd);
-
 		this.getBalances([{id: m.unix(), timestamp: m.endOf('day').unix(), interval: 60 * 60 * 24}]);
 	}
 
