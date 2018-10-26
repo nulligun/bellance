@@ -11,7 +11,7 @@ class Address(Base):
     __tablename__ = "addresses"
 
     id = Column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
-    address = Column(CHAR(42), nullable=False, index=True, unique=True)
+    address = Column(CHAR(42), nullable=False)
     __table_args__ = (
         Index('address_idx', 'address', unique=True, mysql_length=42),
     )
@@ -23,6 +23,7 @@ class Balance(Base):
     address_id = Column(INTEGER(unsigned=True), ForeignKey('addresses.id'), primary_key=True)
     address = relationship("Address", foreign_keys=[address_id])
     balance_date = Column(BIGINT(unsigned=True), nullable=False, primary_key=True)
+    earned = Column(Boolean(), nullable=False, primary_key=True)
     delta = Column(NUMERIC(32, unsigned=False), nullable=False)
 
 
