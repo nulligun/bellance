@@ -19,6 +19,33 @@ class App extends Component {
 		this.selectionModeChanged = this.selectionModeChanged.bind(this);
 		this.handleResetClick = this.handleResetClick.bind(this);
 
+		var v = 1;
+		var version = JSON.parse(localStorage.getItem('version'));
+		if ((version === null) || (version < v))
+		{
+			localStorage.setItem('version', JSON.stringify(v));
+			localStorage.setItem('from', null);
+			localStorage.setItem('enteredTo', null);
+			localStorage.setItem('to', null);
+			localStorage.setItem('selectedDays', JSON.stringify([]));
+			localStorage.setItem('address', '');
+			localStorage.setItem('selectionMode', '');
+			localStorage.setItem("balance_chart_type", null);
+			localStorage.setItem("delta_chart_type", null);
+			localStorage.setItem("spent_chart_type", null);
+			localStorage.setItem("earned_chart_type", null);
+			localStorage.setItem("balance_color", null);
+			localStorage.setItem("delta_delta", null);
+			localStorage.setItem("spent_spent", null);
+			localStorage.setItem("earned_earned", null);
+			localStorage.setItem("balance_label", null);
+			localStorage.setItem("delta_label", null);
+			localStorage.setItem("spent_label", null);
+			localStorage.setItem("earned_label", null);
+			localStorage.setItem("width_dimension", null);
+			localStorage.setItem("height_dimension", null);
+		}
+
 		var from = JSON.parse(localStorage.getItem('from'));
 		var enteredTo = JSON.parse(localStorage.getItem('enteredTo'));
 		var to = JSON.parse(localStorage.getItem('to'));
