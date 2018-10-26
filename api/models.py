@@ -27,8 +27,29 @@ class Balance(Base):
     delta = Column(NUMERIC(32, unsigned=False), nullable=False)
 
 
+class TransactionCount(Base):
+    __tablename__ = "transactions"
+
+    address_id = Column(INTEGER(unsigned=True), ForeignKey('addresses.id'), primary_key=True)
+    address = relationship("Address", foreign_keys=[address_id])
+    transaction_date = Column(BIGINT(unsigned=True), nullable=False, primary_key=True)
+    earned = Column(Boolean(), nullable=False, primary_key=True)
+    total = Column(INTEGER(unsigned=True), nullable=False)
+
+
 class ValidateStatus(Base):
     __tablename__ = "validate_status"
 
     id = Column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
     current_full_validate_block = Column(INTEGER(unsigned=True), nullable=False)
+
+
+class RichListEntry(Base):
+    __tablename__ = "rich_list_entry"
+
+    id = Column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
+    address_id = Column(INTEGER(unsigned=True), ForeignKey('addresses.id'), primary_key=True)
+    address = relationship("Address", foreign_keys=[address_id])
+    rank = Column(INTEGER(unsigned=True), nullable=False)
+
+
