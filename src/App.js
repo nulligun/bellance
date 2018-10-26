@@ -19,7 +19,7 @@ class App extends Component {
 		this.selectionModeChanged = this.selectionModeChanged.bind(this);
 		this.handleResetClick = this.handleResetClick.bind(this);
 
-		var v = 2;
+		var v = 3;
 		var version = JSON.parse(localStorage.getItem('version'));
 		if ((version === null) || (version < v))
 		{

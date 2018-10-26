@@ -17,6 +17,10 @@ class SelectedDateList extends Component {
 			selectedDays: {},
 		};
 		this.address = null;
+		var self = this;
+		window.ee.addListener('addressChanged', function(a) {
+			self.address = a;
+		});
 	}
 
 	setup(days, address)
@@ -85,23 +89,23 @@ class SelectedDateList extends Component {
 			console.log(dates);
 			axios.post('/api/balance_at_time', {address: this.address, dates: dates}).then((res) => {
 				if (res.data.error) {
-					var up = {selectedDays: {}};
-					res.data.dates.forEach((d) => {
-						up['selectedDays'][d.id] = {state: {$set: 'error'}};
+					self.setState((previousState, currentProps) => {
+						var up = {selectedDays: {}};
+						dates.forEach((d, index) => {
+							dates[index]['id'] = d.id;
+							up['selectedDays'][d.id] = {$set: {day: moment.unix(d.id).utc(), state: 'error', balance: '', delta: '', earned: '', spent: ''}};
+						});
+						window.ee.emit('addressError', res.data.error);
+						var newState = update(previousState, up);
+						return newState;
 					});
-					window.ee.emit('addressError', res.data.error);
-					self.setState(update(self.state, up));
 				} else {
 					//NOTE: This pattern is important, the updated object must be created in setState because it's triggered by ajax callback
 					self.setState((previousState, currentProps) => {
 						var up = {selectedDays: {}};
 						res.data.dates.forEach((d, index) => {
 							res.data.dates[index]['id'] = d.id;
-							// if (up['selectedDays'][d.id]) {
-							// 	up['selectedDays'][d.id] = {state: {$set: 'complete'}, balance: {$set: d.balance}, delta: {$set: d.delta}, earned: {$set: d.earned}, spent: {$set: d.spent}};
-							// } else {
-								up['selectedDays'][d.id] = {$set: {day: moment.unix(d.id).utc(), state: 'complete', balance: d.balance, delta: d.delta, earned: d.earned, spent: d.spent}};
-							//}
+							up['selectedDays'][d.id] = {$set: {day: moment.unix(d.id).utc(), state: 'complete', balance: d.balance, delta: d.delta, earned: d.earned, spent: d.spent}};
 						});
 						window.ee.emit('dataReceived', res.data.dates);
 						var newState = update(previousState, up);
