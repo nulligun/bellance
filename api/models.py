@@ -37,6 +37,13 @@ class TransactionCount(Base):
     total = Column(INTEGER(unsigned=True), nullable=False)
 
 
+class Difficulty(Base):
+    __tablename__ = "difficulty"
+
+    transaction_date = Column(BIGINT(unsigned=True), nullable=False, primary_key=True)
+    difficulty = Column(NUMERIC(32, unsigned=False), nullable=False)
+
+
 class ValidateStatus(Base):
     __tablename__ = "validate_status"
 
