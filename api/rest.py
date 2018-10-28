@@ -64,6 +64,22 @@ def get_stats(res, address, dates):
         delta = Session.query(func.sum(Balance.delta).label("delta")).filter_by(address=address).filter(Balance.balance_date <= (timestamp - interval)).one()
         earned = Session.query(func.sum(Balance.delta).label("spent")).filter_by(address=address).filter(Balance.balance_date <= timestamp).filter(Balance.balance_date > (timestamp - interval)).filter(Balance.delta > 0).one()
         spent = Session.query(func.sum(Balance.delta).label("earned")).filter_by(address=address).filter(Balance.balance_date <= timestamp).filter(Balance.balance_date > (timestamp - interval)).filter(Balance.delta < 0).one()
+
+        stats = Session.query(DailyAggregate).filter(DailyAggregate.transaction_date <= timestamp).filter(DailyAggregate.transaction_date > (timestamp - interval)).one_or_none()
+
+        if stats is None:
+            entry['block'] = 0
+            entry['difficulty'] = 0
+            entry['transactions'] = 0
+        else:
+            entry['block'] = int(stats.block)
+            entry['difficulty'] = str(stats.difficulty)
+            entry['transactions'] = int(stats.transactions)
+
+        # if last rich list was more than 5 mintues ago
+        # build rich list
+        # find rank in the rich list
+
         if balance[0] is None:
             entry['balance'] = 0
         else:

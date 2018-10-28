@@ -37,11 +37,13 @@ class TransactionCount(Base):
     total = Column(INTEGER(unsigned=True), nullable=False)
 
 
-class Difficulty(Base):
-    __tablename__ = "difficulty"
+class DailyAggregate(Base):
+    __tablename__ = "daily_aggregates"
 
     transaction_date = Column(BIGINT(unsigned=True), nullable=False, primary_key=True)
     difficulty = Column(NUMERIC(32, unsigned=False), nullable=False)
+    transactions = Column(INTEGER(unsigned=True), nullable=False)
+    block = Column(INTEGER(unsigned=True), nullable=False)
 
 
 class ValidateStatus(Base):
@@ -49,6 +51,7 @@ class ValidateStatus(Base):
 
     id = Column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
     current_full_validate_block = Column(INTEGER(unsigned=True), nullable=False)
+    last_rich_list_build = Column(INTEGER(unsigned=True), nullable=False)
 
 
 class RichListEntry(Base):

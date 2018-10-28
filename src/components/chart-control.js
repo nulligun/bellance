@@ -9,11 +9,13 @@ class ChartControl extends Component {
 		this.typeChanged = this.typeChanged.bind(this);
 		this.colorChanged = this.colorChanged.bind(this);
 		this.labelChanged = this.labelChanged.bind(this);
+		this.axisChanged = this.axisChanged.bind(this);
 
 		this.state = {
 			category: this.props.category,
 			checked: this.props.checked,
 			color: this.props.color,
+			yAxisId: this.props.yAxisId,
 			chartType: this.props.chartType
 		};
 	}
@@ -34,9 +36,15 @@ class ChartControl extends Component {
 		this.setState({checked: !this.state.checked});
 	}
 
+	axisChanged(e) {
+		let new_side = this.state.checked ? "left" : "right";
+		this.props.axisUpdated(this.props.category, new_side);
+		this.setState({yAxisId: new_side});
+	}
+
 	render() {
 		return (<div className="chart-control">
-			<div className="input-group mb-3">
+			<div className="input-group mb-4">
 				<div className="input-group-prepend">
 					<label className="input-group-text" htmlFor="inputGroupSelect01">{this.props.label}</label>
 				</div>
@@ -53,6 +61,13 @@ class ChartControl extends Component {
 					<div className="input-group-append">
 						<div className="input-group-text">
 							<input type="checkbox" checked={this.state.checked && "checked"} onChange={this.labelChanged} />
+						</div>
+					</div>
+				</div>
+				<div className="axis-side">
+					<div className="input-group-append">
+						<div className="input-group-text">
+							<input type="checkbox" checked={(this.state.yAxisId === "right") && "checked"} onChange={this.axisChanged} />
 						</div>
 					</div>
 				</div>

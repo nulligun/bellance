@@ -110,7 +110,7 @@
 }
 
 .chart-control label {
-    width: 140px;
+    width: 160px;
 }
 
 .chart-control {
@@ -127,6 +127,6 @@
     height: 38px;
 }
 
-.label-enabled .input-group-text {
+.axis-side .input-group-text, .label-enabled .input-group-text {
     height: 38px;
 }

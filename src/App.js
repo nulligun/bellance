@@ -19,7 +19,7 @@ class App extends Component {
 		this.selectionModeChanged = this.selectionModeChanged.bind(this);
 		this.handleResetClick = this.handleResetClick.bind(this);
 
-		var v = 3;
+		var v = 7;
 		var version = JSON.parse(localStorage.getItem('version'));
 		if ((version === null) || (version < v))
 		{
@@ -34,14 +34,26 @@ class App extends Component {
 			localStorage.setItem("delta_chart_type", null);
 			localStorage.setItem("spent_chart_type", null);
 			localStorage.setItem("earned_chart_type", null);
+			localStorage.setItem("difficulty_chart_type", null);
+			localStorage.setItem("transactions_chart_type", null);
 			localStorage.setItem("balance_color", null);
-			localStorage.setItem("delta_delta", null);
-			localStorage.setItem("spent_spent", null);
-			localStorage.setItem("earned_earned", null);
+			localStorage.setItem("delta_color", null);
+			localStorage.setItem("spent_color", null);
+			localStorage.setItem("earned_color", null);
+			localStorage.setItem("difficulty_color", null);
+			localStorage.setItem("transactions_color", null);
 			localStorage.setItem("balance_label", null);
 			localStorage.setItem("delta_label", null);
 			localStorage.setItem("spent_label", null);
 			localStorage.setItem("earned_label", null);
+			localStorage.setItem("difficulty_label", null);
+			localStorage.setItem("transactions_label", null);
+			localStorage.setItem("balance_yAxisId", null);
+			localStorage.setItem("delta_yAxisId", null);
+			localStorage.setItem("spent_yAxisId", null);
+			localStorage.setItem("earned_yAxisId", null);
+			localStorage.setItem("difficulty_yAxisId", null);
+			localStorage.setItem("transactions_yAxisId", null);
 			localStorage.setItem("width_dimension", null);
 			localStorage.setItem("height_dimension", null);
 		}
