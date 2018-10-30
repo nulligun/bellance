@@ -4,7 +4,8 @@ import moment from 'moment';
 import axios from "axios/index";
 import update from 'immutability-helper';
 import fileDownload from "js-file-download";
-
+import Formatters from "../classes/formatters";
+import { Config } from "../classes/Config";
 
 class SelectedDateList extends Component {
 	constructor(props) {
@@ -143,14 +144,14 @@ class SelectedDateList extends Component {
 		let delta_avg = 0;
 		let earned_avg = 0;
 		let spent_avg = 0;
-		let difficulty_avg = 0;
+		let difficulty_avg = Config.web3.utils.toBN(0);
 		let transactions_avg = 0;
 		const listItems = Object.keys(this.state.selectedDays).sort((a, b) => this.state.selectedDays[a] === this.state.selectedDays[b].day ? 0 : ((this.state.selectedDays[a].day > this.state.selectedDays[b].day) ? 1 : -1)).map(function(day) {
 			let m = self.state.selectedDays[day];
 			delta_avg += m.delta;
 			earned_avg += m.earned;
 			spent_avg += m.spent;
-			difficulty_avg += m.difficulty;
+			difficulty_avg = difficulty_avg.add(Config.web3.utils.toBN(m.difficulty));
 			transactions_avg += m.transactions;
 			return <SelectedDateListItem key={day} day={m.day} block={m.block} state={m.state} balance={m.balance} delta={m.delta} earned={m.earned} spent={m.spent} difficulty={m.difficulty} transactions={m.transactions}/>
 		});
@@ -159,13 +160,13 @@ class SelectedDateList extends Component {
 			delta_avg = delta_avg / n;
 			earned_avg = earned_avg / n;
 			spent_avg = spent_avg / n;
-			difficulty_avg = difficulty_avg / n;
+			difficulty_avg = difficulty_avg.div(Config.web3.utils.toBN(n));
 			transactions_avg = transactions_avg / n;
 		} else {
 			delta_avg = 0;
 			earned_avg = 0;
 			spent_avg = 0;
-			difficulty_avg = 0;
+			difficulty_avg = Config.web3.utils.toBN(0);;
 			transactions_avg = 0;
 		}
 		return (<div className="selected-date-list">
@@ -184,7 +185,7 @@ class SelectedDateList extends Component {
 					</tr>
 					}
 					{listItems}
-					{listItems.length > 0 && <tr><th>&nbsp;</th><th>&nbsp;</th><th>Average</th><th>{delta_avg}</th><th>{earned_avg}</th><th>{spent_avg}</th><th>{difficulty_avg}</th><th>{transactions_avg}</th></tr>}
+					{listItems.length > 0 && <tr><th>&nbsp;</th><th>&nbsp;</th><th>Average</th><th>{delta_avg.toFixed(2)}</th><th>{earned_avg.toFixed(2)}</th><th>{spent_avg.toFixed(2)}</th><th>{Formatters.difficulty(difficulty_avg.toNumber())}</th><th>{transactions_avg.toFixed(2)}</th></tr>}
 					</tbody>
 				</table>
 			{listItems.length > 0 && <button type="button" className="btn btn-primary csv-download" onClick={this.downloadCSV}>Download CSV</button>}

@@ -7,6 +7,7 @@ import domtoimage from 'dom-to-image';
 import fileDownload from "js-file-download";
 
 import createReactClass from 'create-react-class';
+import Formatters from "../classes/formatters";
 
 const CustomizedAxisTick = createReactClass({
 	render () {
@@ -17,6 +18,14 @@ const CustomizedAxisTick = createReactClass({
 				<text x={0} y={0} dy={16} textAnchor="end" fill="#666" transform="rotate(-35)">{payload.value}</text>
 			</g>
 		);
+	}
+});
+
+const CustomizedDifficultyLabel = createReactClass({
+	render () {
+		const {x, y, stroke, value} = this.props;
+
+		return <text x={x} y={y} dy={-4} fill={stroke} fontSize={10} textAnchor="middle">{Formatters.difficulty(value)}</text>
 	}
 });
 
@@ -202,7 +211,7 @@ class Chart extends Component {
 				{this.state.chart_type.delta !== 'hidden' && <DeltaChart yAxisId={this.state.yAxisId.delta} label={this.state.chart_label.delta && <CustomizedLabel />} dataKey="delta" barSize={20} fill={this.state.chart_color.delta} stroke={this.state.chart_color.delta} />}
 				{this.state.chart_type.earned !== 'hidden' && <EarnedChart yAxisId={this.state.yAxisId.earned} label={this.state.chart_label.earned && <CustomizedLabel />} dataKey="earned" barSize={20} fill={this.state.chart_color.earned} stroke={this.state.chart_color.earned} />}
 				{this.state.chart_type.spent !== 'hidden' && <SpentChart yAxisId={this.state.yAxisId.spent} label={this.state.chart_label.spent && <CustomizedLabel />} dataKey="spent" barSize={20} fill={this.state.chart_color.spent} stroke={this.state.chart_color.spent} />}
-				{this.state.chart_type.difficulty !== 'hidden' && <DifficultyChart yAxisId={this.state.yAxisId.difficulty} label={this.state.chart_label.difficulty && <CustomizedLabel />} dataKey="difficulty" barSize={20} fill={this.state.chart_color.difficulty} stroke={this.state.chart_color.difficulty} />}
+				{this.state.chart_type.difficulty !== 'hidden' && <DifficultyChart yAxisId={this.state.yAxisId.difficulty} label={this.state.chart_label.difficulty && <CustomizedDifficultyLabel />} dataKey="difficulty" barSize={20} fill={this.state.chart_color.difficulty} stroke={this.state.chart_color.difficulty} />}
 				{this.state.chart_type.transactions !== 'hidden' && <TransactionsChart yAxisId={this.state.yAxisId.transactions} label={this.state.chart_label.transactions && <CustomizedLabel />} dataKey="transactions" barSize={20} fill={this.state.chart_color.transactions} stroke={this.state.chart_color.transactions} />}
 			</ComposedChart>
 			</div>
