@@ -4,6 +4,7 @@ from flask_cors import CORS
 from sqlalchemy import create_engine, and_, or_
 from sqlalchemy.orm import sessionmaker, scoped_session
 from models import *
+import datetime
 import logging
 from decimal import Decimal
 import re
@@ -15,8 +16,17 @@ app = Flask(__name__)
 CORS(app)
 config = ConfigObj(".env")
 engine = create_engine("mysql+mysqldb://%(database_user)s:%(database_password)s@%(database_host)s/%(database_name)s" % config)
+engine2 = create_engine("mysql+mysqldb://%(database_user)s:%(database_password)s@%(database_host)s/%(database_name)s" % config, isolation_level="READ UNCOMMITTED")
 session_factory = sessionmaker(bind=engine)
-Session = scoped_session(session_factory)
+session_factory2 = sessionmaker(bind=engine2)
+Session = scoped_session(session_factory=session_factory)
+Session2 = scoped_session(session_factory=session_factory2)
+
+ERROR_ADDRESS_REQUIRED = 1
+ERROR_ADDRESS_INVALID = 2
+WARNING_ADDRESS_CHECKSUM = 3
+ERROR_DATES_REQUIRED = 4
+ERROR_ADDRESS_NOT_FOUND = 5
 
 
 def address_valid(address):
@@ -27,25 +37,64 @@ def address_valid(address):
     return False
 
 
+@app.route('/validate_address', methods=["POST"])
+def validate_address():
+    res = {}
+    req = request.get_json(force=True)
+    if req['address'] is None:
+        res['error'] = ERROR_ADDRESS_REQUIRED
+        res['message'] = 'Address is required'
+    else:
+        address = req['address'].lower().strip()
+        if not address_valid(address):
+            res['error'] = ERROR_ADDRESS_INVALID
+            res['message'] = 'Address is not valid'
+        else:
+            address_rec = Session.query(Address).filter_by(address=address).one_or_none()
+            if address_rec is None:
+                res['error'] = ERROR_ADDRESS_NOT_FOUND
+                res['message'] = 'Address was not found'
+            else:
+                v = Session2.query(ValidateStatus).one()
+                if v.last_rich_list_build + 300 < datetime.datetime.now().timestamp():
+                    Session2.query(RichListEntry).delete()
+                    engine2.execute("insert into rich_list_entry (id, address_id, rank) select null, address_id, @curRank := @curRank + 1 AS rank from (select address_id, sum(delta) sd from balances b group by address_id having sd > 1000000000000000000 order by sd desc) b, (select @curRank := 0) r")
+                    Session2.commit()
+                    Session2.flush()
+                    v.last_rich_list_build = datetime.datetime.now().timestamp()
+                    Session2.commit()
+
+                c = Session2.query(func.count(RichListEntry.id)).one()
+                res['total'] = c[0]
+
+                rank = Session2.query(RichListEntry).filter_by(address=address_rec).one_or_none()
+                if rank is not None:
+                    res['rank'] = rank.rank
+                else:
+                    res['rank'] = 0
+
+    return jsonify(res)
+
+
 @app.route('/balance_at_time', methods=["POST"])
 def balance_at():
     res = {}
     req = request.get_json(force=True)
 
     if req['address'] is None:
-        res['error'] = 'address is required'
+        res['error'] = ERROR_ADDRESS_REQUIRED
     else:
         address = req['address'].lower()
         if not address_valid(address):
-            res['error'] = 'address is not valid'
+            res['error'] = ERROR_ADDRESS_INVALID
         elif req['dates'] is None:
-            res['error'] = 'dates array is required'
+            res['error'] = ERROR_DATES_REQUIRED
 
     if 'error' not in res:
         dates = req['dates']
         address_rec = Session.query(Address).filter_by(address=address).one_or_none()
         if address_rec is None:
-            res['error'] = 'address not found'
+            res['error'] = ERROR_ADDRESS_NOT_FOUND
         else:
             get_stats(res, address_rec, dates)
 
@@ -75,10 +124,6 @@ def get_stats(res, address, dates):
             entry['block'] = int(stats.block)
             entry['difficulty'] = str(stats.difficulty)
             entry['transactions'] = int(stats.transactions)
-
-        # if last rich list was more than 5 mintues ago
-        # build rich list
-        # find rank in the rich list
 
         if balance[0] is None:
             entry['balance'] = 0

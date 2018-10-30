@@ -73,8 +73,18 @@ class App extends Component {
 			selectionMode: JSON.parse(localStorage.getItem('selectionMode') || '"day"'),
 			from: from,
 			to: to,
+			whale: false,
 			enteredTo: enteredTo
 		};
+
+		const self = this;
+		this.calendarEnabled = false;
+		window.ee.addListener('addressValid', function(v) {
+			self.calendarEnabled = v;
+		});
+		window.ee.addListener('whale', function(v) {
+			self.setState({whale: v});
+		});
 
 		this.dateList = React.createRef();
 	}
@@ -144,6 +154,7 @@ class App extends Component {
 	}
 
 	handleDayMouseDown(day, { selected }) {
+		if (!this.calendarEnabled) return;
 		if (this.state.selectionMode === 'day') {
 			if (selected) {
 				this.mouseDownState = 'deselect';
@@ -159,6 +170,7 @@ class App extends Component {
 	}
 
 	handleDayMouseUp(day) {
+		if (!this.calendarEnabled) return;
 		if (this.state.selectionMode === 'day') {
 			this.mouseDownState = 'none';
 		} else {
@@ -247,6 +259,7 @@ class App extends Component {
 	      />
 	      <SelectedDateList ref={this.dateList} />
 	      <Chart/>
+	      {this.state.whale && '🐳'}
       </div>
     );
   }

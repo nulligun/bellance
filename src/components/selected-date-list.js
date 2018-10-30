@@ -90,16 +90,7 @@ class SelectedDateList extends Component {
 			console.log(dates);
 			axios.post('/api/balance_at_time', {address: this.address, dates: dates}).then((res) => {
 				if (res.data.error) {
-					self.setState((previousState, currentProps) => {
-						var up = {selectedDays: {}};
-						dates.forEach((d, index) => {
-							dates[index]['id'] = d.id;
-							up['selectedDays'][d.id] = {$set: {day: moment.unix(d.id).utc(), state: 'error', balance: '', delta: '', earned: '', spent: '', block: '', difficulty:'', transactions:''}};
-						});
-						window.ee.emit('addressError', res.data.error);
-						var newState = update(previousState, up);
-						return newState;
-					});
+
 				} else {
 					//NOTE: This pattern is important, the updated object must be created in setState because it's triggered by ajax callback
 					self.setState((previousState, currentProps) => {
