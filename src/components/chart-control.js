@@ -37,7 +37,7 @@ class ChartControl extends Component {
 	}
 
 	axisChanged(e) {
-		let new_side = this.state.checked ? "left" : "right";
+		let new_side = (this.state.yAxisId === "right") ? "left" : "right";
 		this.props.axisUpdated(this.props.category, new_side);
 		this.setState({yAxisId: new_side});
 	}
