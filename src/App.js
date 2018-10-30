@@ -230,6 +230,7 @@ class App extends Component {
 	  	modifiers.end = enteredTo;
 		  selectedDays = [from, { from, to: enteredTo }];
 	  }
+	  var todayDate = moment().add(new Date().getTimezoneOffset(), 'minutes');
 		let day_checked = (this.state.selectionMode === "day") ? "checked" : '';
 	  let range_checked = (this.state.selectionMode === "range") ? "checked" : '';
     return (
@@ -253,7 +254,7 @@ class App extends Component {
 		      onDayMouseEnter={this.handleDayMouseEnter}
 		      disabledDays={[
 			      {
-				      after: new Date()
+				      after: todayDate.toDate()
 			      }
 			      ]}
 	      />
