@@ -55,13 +55,11 @@ def validate_address():
                 res['error'] = ERROR_ADDRESS_NOT_FOUND
                 res['message'] = 'Address was not found'
             else:
-                v = Session2.query(ValidateStatus).one()
-                if v.last_rich_list_build + 300 < datetime.datetime.now().timestamp():
+                v = Session2.query(StatusVariables).filter_by(id='last_rich_list_build').one()
+                if v.value + 300 < datetime.datetime.now().timestamp():
                     Session2.query(RichListEntry).delete()
                     engine2.execute("insert into rich_list_entry (id, address_id, rank) select null, address_id, @curRank := @curRank + 1 AS rank from (select address_id, sum(delta) sd from balances b group by address_id having sd > 1000000000000000000 order by sd desc) b, (select @curRank := 0) r")
-                    Session2.commit()
-                    Session2.flush()
-                    v.last_rich_list_build = datetime.datetime.now().timestamp()
+                    v.value = datetime.datetime.now().timestamp()
                     Session2.commit()
 
                 c = Session2.query(func.count(RichListEntry.id)).one()

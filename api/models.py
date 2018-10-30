@@ -46,12 +46,11 @@ class DailyAggregate(Base):
     block = Column(INTEGER(unsigned=True), nullable=False)
 
 
-class ValidateStatus(Base):
-    __tablename__ = "validate_status"
+class StatusVariables(Base):
+    __tablename__ = "status_variables"
 
-    id = Column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
-    current_full_validate_block = Column(INTEGER(unsigned=True), nullable=False)
-    last_rich_list_build = Column(INTEGER(unsigned=True), nullable=False)
+    id = Column(String(32), primary_key=True)
+    value = Column(INTEGER(unsigned=True), nullable=False)
 
 
 class RichListEntry(Base):
