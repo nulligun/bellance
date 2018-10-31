@@ -216,7 +216,7 @@ class Chart extends Component {
 				<CartesianGrid strokeDasharray="3 3" />
 				<XAxis dataKey="date" tick={<CustomizedAxisTick/>} />
 				<YAxis yAxisId="left" tick={<CustomizedYAxisTick/>} width={100}/>
-				<YAxis yAxisId="right" orientation="right" />
+				<YAxis yAxisId="right" tick={<CustomizedYAxisTick/>} width={100} orientation="right" />
 				<Tooltip />
 				<Legend verticalAlign="top" height={36}/>
 				{this.state.chart_type.balance !== 'hidden' && <BalanceChart yAxisId={this.state.yAxisId.balance} label={this.state.chart_label.balance && <CustomizedLabel />} dataKey="balance" barSize={20} fill={this.state.chart_color.balance} stroke={this.state.chart_color.balance} />}
