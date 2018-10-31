@@ -230,7 +230,7 @@ class App extends Component {
 	  	modifiers.end = enteredTo;
 		  selectedDays = [from, { from, to: enteredTo }];
 	  }
-	  var todayDate = moment().add(new Date().getTimezoneOffset(), 'minutes');
+	  let todayDate = moment().add(new Date().getTimezoneOffset(), 'minutes');
 		let day_checked = (this.state.selectionMode === "day") ? "checked" : '';
 	  let range_checked = (this.state.selectionMode === "range") ? "checked" : '';
     return (
@@ -247,6 +247,7 @@ class App extends Component {
 	      </div>
 	      <DayPicker
 		      showOutsideDays
+		      initialMonth={todayDate.toDate()}
 		      modifiers={modifiers}
 		      selectedDays={selectedDays}
 		      onDayMouseDown={this.handleDayMouseDown}
