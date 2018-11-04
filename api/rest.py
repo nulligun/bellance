@@ -15,8 +15,8 @@ logger.setLevel(logging.INFO)
 app = Flask(__name__)
 CORS(app)
 config = ConfigObj(".env")
-engine = create_engine("mysql+mysqldb://%(database_user)s:%(database_password)s@%(database_host)s/%(database_name)s" % config)
-engine2 = create_engine("mysql+mysqldb://%(database_user)s:%(database_password)s@%(database_host)s/%(database_name)s" % config, isolation_level="READ UNCOMMITTED")
+engine = create_engine("mysql+mysqldb://%(database_user)s:%(database_password)s@%(database_host)s/%(database_name)s" % config, isolation_level="READ UNCOMMITTED", pool_recycle=4)
+engine2 = create_engine("mysql+mysqldb://%(database_user)s:%(database_password)s@%(database_host)s/%(database_name)s" % config, isolation_level="READ UNCOMMITTED", pool_recycle=4)
 session_factory = sessionmaker(bind=engine)
 session_factory2 = sessionmaker(bind=engine2)
 Session = scoped_session(session_factory=session_factory)
@@ -60,7 +60,11 @@ def validate_address():
                     Session2.query(RichListEntry).delete()
                     engine2.execute("insert into rich_list_entry (id, address_id, rank) select null, address_id, @curRank := @curRank + 1 AS rank from (select address_id, sum(delta) sd from balances b group by address_id having sd > 1000000000000000000 order by sd desc) b, (select @curRank := 0) r")
                     v.value = datetime.datetime.now().timestamp()
-                    Session2.commit()
+                    try:
+                        Session2.commit()
+                    except:
+                        Session2.rollback()
+                        raise
 
                 c = Session2.query(func.count(RichListEntry.id)).one()
                 res['total'] = c[0]
@@ -70,6 +74,18 @@ def validate_address():
                     res['rank'] = rank.rank
                 else:
                     res['rank'] = 0
+
+    try:
+        Session.commit()
+    except:
+        Session.rollback()
+        raise
+
+    try:
+        Session2.commit()
+    except:
+        Session2.rollback()
+        raise
 
     return jsonify(res)
 
@@ -95,6 +111,12 @@ def balance_at():
             res['error'] = ERROR_ADDRESS_NOT_FOUND
         else:
             get_stats(res, address_rec, dates)
+
+    try:
+        Session.commit()
+    except:
+        Session.rollback()
+        raise
 
     Session.remove()
     return jsonify(res)
