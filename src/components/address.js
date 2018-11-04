@@ -7,12 +7,12 @@ class Address extends Component {
 		this.addressChanged = this.addressChanged.bind(this);
 		this.checkAddress = this.checkAddress.bind(this);
 
-		var self = this;
+		let self = this;
 		window.ee.addListener('addressError', function(error) {
 			self.setState({has_error: true, error_message: error});
 		});
 
-		var address = localStorage.getItem('address') || '0xF08d00694Ff9aDbE37960030fE622EdEa35Eb48F';
+		const address = localStorage.getItem('address') || '0xF08d00694Ff9aDbE37960030fE622EdEa35Eb48F';
 
 		this.state = {
 			has_error: false,

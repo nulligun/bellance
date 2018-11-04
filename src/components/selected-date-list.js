@@ -52,8 +52,9 @@ class SelectedDateList extends Component {
 		to.add(1, 'd');
 		while (from.isBefore(to))
 		{
-			toAdd[from.unix()] = {state: 'pending', day: moment(from).endOf('day'), balance: 0, delta: 0, earned: 0, spent: 0, block: 0, difficulty: 0, transactions: 0};
-			dates.push({id: from.unix(), timestamp: moment(from).endOf('day').unix(), interval: 60 * 60 * 24});
+			let m = this.endOfDay(from);
+			toAdd[m.unix()] = {state: 'pending', day: m, balance: 0, delta: 0, earned: 0, spent: 0, block: 0, difficulty: 0, transactions: 0};
+			dates.push({id: m.unix(), timestamp: m.unix(), interval: 60 * 60 * 24});
 			from.add(1, 'd');
 		}
 		let sd = {selectedDays: { ...toAdd, ...this.state.selectedDays}};
@@ -70,8 +71,9 @@ class SelectedDateList extends Component {
 		to.add(1, 'd');
 		while (from.isBefore(to))
 		{
-			toAdd[from.unix()] = {state: 'pending', day: moment(from).endOf('day'), balance: 0, delta: 0, earned: 0, spent: 0, block: 0, difficulty: 0, transactions: 0};
-			dates.push({id: from.unix(), timestamp: moment(from).endOf('day').unix(), interval: 60 * 60 * 24});
+			let m = this.endOfDay(from);
+			toAdd[m.unix()] = {state: 'pending', day: m, balance: 0, delta: 0, earned: 0, spent: 0, block: 0, difficulty: 0, transactions: 0};
+			dates.push({id: m.unix(), timestamp: m.unix(), interval: 60 * 60 * 24});
 			from.add(1, 'd');
 		}
 		let sd = {selectedDays: { ...toAdd, ...this.state.selectedDays}};
@@ -82,7 +84,7 @@ class SelectedDateList extends Component {
 
 	getBalances(dates)
 	{
-		var self = this;
+		let self = this;
 		if (this.address === null)
 		{
 			console.error("Address not defined yet");
@@ -95,13 +97,13 @@ class SelectedDateList extends Component {
 				} else {
 					//NOTE: This pattern is important, the updated object must be created in setState because it's triggered by ajax callback
 					self.setState((previousState, currentProps) => {
-						var up = {selectedDays: {}};
+						let up = {selectedDays: {}};
 						res.data.dates.forEach((d, index) => {
 							res.data.dates[index]['id'] = d.id;
 							up['selectedDays'][d.id] = {$set: {day: moment.unix(d.id).utc(), state: 'complete', balance: d.balance, delta: d.delta, earned: d.earned, spent: d.spent, difficulty: d.difficulty, transactions: d.transactions, block: d.block}};
 						});
 						window.ee.emit('dataReceived', res.data.dates);
-						var newState = update(previousState, up);
+						let newState = update(previousState, up);
 						return newState;
 					});
 				}
@@ -109,14 +111,19 @@ class SelectedDateList extends Component {
 		}
 	}
 
+	endOfDay(day)
+	{
+		return moment(day).endOf('day').add(new Date().getTimezoneOffset(), 'minutes');
+	}
+
 	addDay(day)
 	{
-		let m = moment(day).utc();
+		let m = this.endOfDay(day);
 		let toAdd = {};
-		toAdd[m.unix()] = {state: 'pending', day: moment(m).endOf('day'), balance: 0, delta: 0, earned: 0, spent: 0, block: 0, difficulty: '', transactions: 0};
+		toAdd[m.unix()] = {state: 'pending', day: m, balance: 0, delta: 0, earned: 0, spent: 0, block: 0, difficulty: '', transactions: 0};
 		let sd = {selectedDays: { ...toAdd, ...this.state.selectedDays}};
 		this.setState(sd);
-		this.getBalances([{id: m.unix(), timestamp: m.endOf('day').unix(), interval: 60 * 60 * 24}]);
+		this.getBalances([{id: m.unix(), timestamp: m.unix(), interval: 60 * 60 * 24}]);
 	}
 
 	downloadCSV() {
@@ -134,7 +141,7 @@ class SelectedDateList extends Component {
 
 	removeDay(day)
 	{
-		let m = moment(day).utc();
+		let m = this.endOfDay(day);
 		window.ee.emit('dataRemoved', m.unix());
 		this.setState(update(this.state, {selectedDays: {$unset: [m.unix()]}}));
 	}
