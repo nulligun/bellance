@@ -90,6 +90,16 @@ def validate_address():
     return jsonify(res)
 
 
+@app.route('/circulating_supply', methods=["GET"])
+def circulating_supply():
+    balance = Session.query(func.sum(Balance.delta).label("balance")).one()
+    if request.args.get('decimal') is not None:
+        b = balance[0] / Decimal(1000000000000000000)
+    else:
+        b = balance[0]
+    return str(b)
+
+
 @app.route('/balance_at_time', methods=["POST"])
 def balance_at():
     res = {}
